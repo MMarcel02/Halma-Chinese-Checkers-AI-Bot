@@ -75,7 +75,8 @@ def get_board_score(
                 if dist < closest_dist:
                     closest_dist = dist
 
-            score -= closest_dist
+            #Use 8 as maximum distance so every value postive
+            score += (8 - closest_dist)
     return score
 
 CORNERS = {
@@ -85,12 +86,15 @@ CORNERS = {
     4: (0, 4)
 }
 
+#upper bound is 96, each player has 3 pieces at max distance 8. All 4 players is 24*4 = 96
+SCORE_SUM_BOUND = 96;
+
 def recursive_max(
     board: List[List[int]],
     player: int,
     curr_depth: int,
     parent_id: int,
-    bound: int,
+    bound: float,
 ) -> Tuple[Tuple[int, int, int, int], Tuple[Tuple[int, int], Tuple[int, int]]]:
 
     visited_positions = recursive_max.visited_positions
@@ -113,13 +117,6 @@ def recursive_max(
             get_board_score(board, 4),
         ) 
         visited_positions[position] = (scores, curr_depth)
-
-        new_sum = 0
-        for score in scores:
-            new_sum += score
-        if new_sum < recursive_max.sum:
-            recursive_max.sum = new_sum
-
         return scores, None
 
     corner = CORNERS[player]
@@ -127,12 +124,13 @@ def recursive_max(
     next_player = (player % 4) + 1
 
     if not legal_moves:
+        child_id = None
         if tree is not None:
             recursive_max.counter += 1 
             child_id = recursive_max.counter
             tree.create_node(f"Player {player}: No legal moves, skipping turn", child_id, parent = parent_id)
 
-        scores, move = recursive_max(board, next_player, curr_depth -1,  child_id, recursive_max.sum)
+        scores, move = recursive_max(board, next_player, curr_depth - 1, child_id, bound)
         return scores, None
 
     player_index = player - 1
@@ -158,9 +156,6 @@ def recursive_max(
     best_move = None
 
     for score, move in ordered_moves:
-        if best_score != None and best_score[player_index] >= bound:
-            return best_score, best_move
-
         oldPos, newPos = move
 
         child_board = [row[:] for row in board]
@@ -179,15 +174,21 @@ def recursive_max(
                             parent = parent_id,
                             data = score)
 
-        next_bound = recursive_max.sum
-        if best_score != None:
-            next_bound -= best_score[player_index]
+        #After finiding best score, whats left can be at most Sum - that score;
+        if best_score is not None:
+            next_bound = SCORE_SUM_BOUND - best_score[player_index]
+        else:
+            next_bound = SCORE_SUM_BOUND
 
         next_score, _ = recursive_max(child_board, next_player, curr_depth - 1, child_id, next_bound)
 
         if best_score == None or next_score[player_index] > best_score[player_index]:
             best_score = next_score
             best_move = move
+
+        
+        if best_score[player_index] >= bound:
+            break
 
     visited_positions[position] = (best_score, curr_depth)
     return best_score, best_move
@@ -212,10 +213,10 @@ def minimax_bot(
 
     visited_positions: dict[Tuple[bytes, int], Tuple[Tuple[int, int, int, int], int]] = {}
     recursive_max.visited_positions = visited_positions
-    recursive_max.sum = math.inf
 
-    max_depth = 2
-    best_score, best_move = recursive_max(board, player, max_depth, 0, recursive_max.sum)
+    max_depth = 8;
+    #start root with infinite bounds
+    best_score, best_move = recursive_max(board, player, max_depth, 0, float("inf"))
     oldPos, newPos = best_move
 
     if visualize_tree:

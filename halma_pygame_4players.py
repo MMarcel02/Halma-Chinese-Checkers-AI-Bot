@@ -15,9 +15,10 @@ from typing import Dict, List, Optional, Tuple, Callable
 import pygame
 
 from halma import *
+from AI_Player_Team20 import*
 
 MAXIMUM_MOVE_LIMIT: int = 100  # Total turns across all four players, including skipped turns.
-VISUALIZE_SEARCH_TREE: bool = False # This is here to match the function signature, the random bot does not visualize anything 
+VISUALIZE_SEARCH_TREE: bool = False; # This is here to match the function signature, the random bot does not visualize anything 
 BOT_DELAY_MS: int = 450
 
 INITIAL_BOARD: List[List[int]] = initial_pos
@@ -51,10 +52,10 @@ Example: from AI_Player_Team1 import AI_Player_Team1
 Alternatively you can set a desired player's bot function to None and play them yourself
 '''
 BOT_FUNCTIONS: Dict[int, Optional[BotFunction]] = {
-    1: AI_Player_Team20,
-    2: random_bot,
-    3: random_bot,
-    4: random_bot,
+    1: minimax_bot,
+    2: minimax_bot,
+    3: minimax_bot,
+    4: minimax_bot,
 }
 
 
