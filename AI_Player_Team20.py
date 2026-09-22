@@ -30,15 +30,28 @@ def get_legal_moves(
     legal_moves: List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
     
     for row in range(5):
-        for column in range(5):
-            if board[row][column] != player:
+        for col in range(5):
+            if board[row][col] != player:
                 continue
 
-            oldPos: Tuple[int, int] = (row, column)
+            oldPos: Tuple[int, int] = (row, col)
 
-            for new_row in range(5):
-                for new_column in range(5):
-                    newPos: Tuple[int, int] = (new_row, new_column)
+            for i in range(5):
+                for j in range(5):
+                    # We only want to search within the possible range,
+                    # so we center the search around the piece,
+                    # and not search every single cell on the board.
+
+                    row_offset = i - 2
+                    col_offset = j - 2
+
+                    new_row = row + row_offset
+                    new_col = col + col_offset
+
+                    if new_row < 0 or new_row > 4: continue
+                    if new_col < 0 or new_col > 4: continue
+
+                    newPos: Tuple[int, int] = (new_row, new_col)
 
                     if check_legal_move(board, oldPos, newPos):
                         legal_moves.append((oldPos, newPos))
@@ -48,6 +61,9 @@ def get_legal_moves(
 '''
 Evaluate postion a player on board (Week 2)
 '''
+
+WINCELL_SCORE_BONUS = 1
+
 def get_board_score(
     board: List[List[int]],
     player: int,
@@ -69,6 +85,13 @@ def get_board_score(
                 if dist < closest_dist:
                     closest_dist = dist
 
+                # If a piece is already on a win cell,
+                # add a bonus point to the score.
+                # This adds up for _every_ cell, not just one,
+                # so the max bonus is 3 per player.
+                if closest_dist == 0:
+                    score += 1
+
             #Subtract from 8 so every reward score is positive (8 is max Manhattan distance)
             score += (8 - closest_dist)
     return score
@@ -80,8 +103,11 @@ CORNERS = {
     4: (0, 4)
 }
 
-#Upper bound is 96. Each player has 3 pieces at max distance 8 so 3 * 8. All 4 players is 24*4 = 96
-SCORE_SUM_BOUND = 96;
+SCORE_DISTANCE_BOUND = 3 * 8  # 3 pieces, max distance of 8
+SCORE_WINCELL_BONUS_BOUND = 3 * WINCELL_SCORE_BONUS # 3 pieces, each can have win cell bonus
+
+# (4 players) * (all other bounds)
+SCORE_SUM_BOUND = 4 * (SCORE_DISTANCE_BOUND + SCORE_WINCELL_BONUS_BOUND)
 
 def recursive_max(
     board: List[List[int]],
