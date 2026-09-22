@@ -4,6 +4,15 @@ from halma import *
 import math
 import graphviz
 
+WINCELL_SCORE_BONUS = 1
+SCORE_DISTANCE_BOUND = 3 * 8  # 3 pieces, max distance of 8
+SCORE_WINCELL_BONUS_BOUND = 3 * WINCELL_SCORE_BONUS # 3 pieces, each can have win cell bonus
+
+# (4 players) * (all other bounds)
+
+MAX_GLOBAL_BOUND_SINGLE_PLAYER = SCORE_DISTANCE_BOUND + SCORE_WINCELL_BONUS_BOUND
+MAX_GLOBAL_BOUND_ALL_PLAYERS = 4 * MAX_GLOBAL_BOUND_SINGLE_PLAYER
+
 '''
 Converts Board State to a bytes object for faster comparisons
 '''
@@ -63,8 +72,6 @@ def get_legal_moves(
                         legal_moves.append((oldPos, newPos))
     return legal_moves
 
-
-
 '''
 Evaluate postion a player on board (Week 2)
 '''
@@ -100,17 +107,6 @@ def get_board_score(
             score += (8 - closest_dist)
     return score
 
-
-
-WINCELL_SCORE_BONUS = 1
-SCORE_DISTANCE_BOUND = 3 * 8  # 3 pieces, max distance of 8
-SCORE_WINCELL_BONUS_BOUND = 3 * WINCELL_SCORE_BONUS # 3 pieces, each can have win cell bonus
-
-# (4 players) * (all other bounds)
-
-MAX_GLOBAL_BOUND_SINGLE_PLAYER = SCORE_DISTANCE_BOUND + SCORE_WINCELL_BONUS_BOUND
-MAX_GLOBAL_BOUND_ALL_PLAYERS = 4 * MAX_GLOBAL_BOUND_SINGLE_PLAYER
-
 def recursive_max(
     board: List[List[int]],
     player: int,
@@ -138,6 +134,7 @@ def recursive_max(
             get_board_score(board, 3),
             get_board_score(board, 4),
         ) 
+
         visited_positions[position] = (scores, curr_depth)
         return scores, None
 
@@ -213,7 +210,13 @@ def recursive_max(
         # Shallow pruning:
         # Idea is that child cuts off searching rest of their own moves IF
         # their best move so far leaves less points for parent than parents lower bound OR 
-        # their best score is the winning score 
+        # their best score is the winning score
+        #
+        # the thing is in this case parent_min_bound >= points_remaininng will never be True
+        # because points points_remaininng will be always much greater than the min bound for a particular parent
+        # as we are evaluating players independently right new_row
+        #
+        # To fix this we would need to have a constant sum board score
         
         points_remaininng = MAX_GLOBAL_BOUND_ALL_PLAYERS - min_bound
         if parent_min_bound >= points_remaininng or min_bound >= MAX_GLOBAL_BOUND_SINGLE_PLAYER:
