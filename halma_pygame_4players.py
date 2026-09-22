@@ -52,10 +52,10 @@ Example: from AI_Player_Team1 import AI_Player_Team1
 Alternatively you can set a desired player's bot function to None and play them yourself
 '''
 BOT_FUNCTIONS: Dict[int, Optional[BotFunction]] = {
-    1: minimax_bot,
-    2: minimax_bot,
-    3: minimax_bot,
-    4: minimax_bot,
+    1: AI_Player_Team20,
+    2: AI_Player_Team20,
+    3: AI_Player_Team20,
+    4: AI_Player_Team20,
 }
 
 
