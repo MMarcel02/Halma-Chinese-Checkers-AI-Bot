@@ -64,7 +64,6 @@ def get_legal_moves(
     return legal_moves
 
 
-WINCELL_SCORE_BONUS = 1
 
 '''
 Evaluate postion a player on board (Week 2)
@@ -90,12 +89,12 @@ def get_board_score(
                 if dist < closest_dist:
                     closest_dist = dist
 
-                # If a piece is already on a win cell,
-                # add a bonus point to the score.
-                # This adds up for _every_ cell, not just one,
-                # so the max bonus is 3 per player.
-                if closest_dist == 0:
-                    score += 1
+            # If a piece is already on a win cell,
+            # add a bonus point to the score.
+            # This adds up for _every_ cell, not just one,
+            # so the max bonus is 3 per player.
+            if closest_dist == 0:
+                score += WINCELL_SCORE_BONUS
 
             #Subtract from 8 so every reward score is positive (8 is max Manhattan distance)
             score += (8 - closest_dist)
@@ -108,18 +107,22 @@ CORNERS = {
     4: (0, 4)
 }
 
+
+WINCELL_SCORE_BONUS = 1
 SCORE_DISTANCE_BOUND = 3 * 8  # 3 pieces, max distance of 8
 SCORE_WINCELL_BONUS_BOUND = 3 * WINCELL_SCORE_BONUS # 3 pieces, each can have win cell bonus
 
 # (4 players) * (all other bounds)
-SCORE_SUM_BOUND = 4 * (SCORE_DISTANCE_BOUND + SCORE_WINCELL_BONUS_BOUND)
+
+MAX_GLOBAL_BOUND_SINGLE_PLAYER = SCORE_DISTANCE_BOUND + SCORE_WINCELL_BONUS_BOUND
+MAX_GLOBAL_BOUND_ALL_PLAYERS = 4 * MAX_GLOBAL_BOUND_SINGLE_PLAYER
 
 def recursive_max(
     board: List[List[int]],
     player: int,
     curr_depth: int,
     parent_id: int,
-    bound: float,
+    parent_min_bound: int,
 ) -> Tuple[Tuple[int, int, int, int], Tuple[Tuple[int, int], Tuple[int, int]]]:
 
     visited_positions = recursive_max.visited_positions
@@ -155,7 +158,7 @@ def recursive_max(
             child_id = recursive_max.counter
             tree.create_node(f"Player {player}: No legal moves, skipping turn", child_id, parent = parent_id)
 
-        scores, move = recursive_max(board, next_player, curr_depth - 1, child_id, bound)
+        scores, move = recursive_max(board, next_player, curr_depth - 1, child_id, parent_min_bound)
         return scores, None
 
     player_index = player - 1
@@ -180,6 +183,10 @@ def recursive_max(
     best_score = None
     best_move = None
 
+    # This is the same as the best score for this player at this depth
+    #
+    min_bound = 0
+
     for score, move in ordered_moves:
         oldPos, newPos = move
 
@@ -199,21 +206,20 @@ def recursive_max(
                             parent = parent_id,
                             data = score)
 
-        #After finiding best score, whats left can be at most Sum - that score;
-        #Our attempt at shallow pruning (not robust in multiplayer variant due to bounding)
-        if best_score is not None:
-            next_bound = SCORE_SUM_BOUND - best_score[player_index]
-        else:
-            next_bound = SCORE_SUM_BOUND
+        next_score, _ = recursive_max(child_board, next_player, curr_depth - 1, child_id, min_bound)
 
-        next_score, _ = recursive_max(child_board, next_player, curr_depth - 1, child_id, next_bound)
-
-        if best_score == None or next_score[player_index] > best_score[player_index]:
+        if best_score is None or next_score[player_index] > best_score[player_index]:
             best_score = next_score
             best_move = move
+            min_bound = best_score[player_index]
 
+        # Shallow pruning:
+        # Idea is that child cuts off searching rest of their own moves IF
+        # their best move so far leaves less points for parent than parents lower bound OR 
+        # their best score is the winning score 
         
-        if best_score[player_index] >= bound:
+        points_remaininng = MAX_GLOBAL_BOUND_ALL_PLAYERS - min_bound
+        if parent_min_bound >= points_remaininng or min_bound >= MAX_GLOBAL_BOUND_SINGLE_PLAYER:
             break
 
     visited_positions[position] = (best_score, curr_depth)
@@ -241,8 +247,8 @@ def AI_Player_Team20(
     recursive_max.visited_positions = visited_positions
 
     max_depth = 2
-    #start root with infinite bounds
-    best_score, best_move = recursive_max(board, player, max_depth, 0, float("inf"))
+
+    best_score, best_move = recursive_max(board, player, max_depth, 0, 0)
     oldPos, newPos = best_move
 
     if visualize_tree:
