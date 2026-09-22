@@ -163,7 +163,7 @@ def recursive_max(
 
             recursive_max.counter += 1 
             child_id = recursive_max.counter
-            tree.create_node(tag = f"P{player}: {oldPosStr} -> {newPosStr} (Heuristic Score: {score})", 
+            tree.create_node(tag = f"P{player}: {oldPosStr} -> {newPosStr} (HS: {score})", 
                             identifier = child_id, 
                             parent = parent_id,
                             data = score)
@@ -215,6 +215,8 @@ def AI_Player_Team20(
     oldPos, newPos = best_move
 
     if visualize_tree:
+        tree.show()
+
         tree.to_graphviz("Team20_Tree.gv")
         graphviz.render("dot", format="png", filepath="Team20_Tree.gv", outfile="Team20_Tree.png")
 
