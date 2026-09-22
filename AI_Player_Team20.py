@@ -3,6 +3,7 @@ from halma import *
 import itertools
 import heapq
 import math
+import graphviz
 
 '''
 # Judging by wording on the assignment I'm guessing only stuff in this file will be tested
@@ -201,7 +202,6 @@ def minimax_bot(
     player: int,
     visualize_tree: bool
 ) -> Tuple[str, str]:
-
     tree = None
     if visualize_tree:
         tree = Tree()
@@ -214,13 +214,14 @@ def minimax_bot(
     visited_positions: dict[Tuple[bytes, int], Tuple[Tuple[int, int, int, int], int]] = {}
     recursive_max.visited_positions = visited_positions
 
-    max_depth = 8;
+    max_depth = 2
     #start root with infinite bounds
     best_score, best_move = recursive_max(board, player, max_depth, 0, float("inf"))
     oldPos, newPos = best_move
 
     if visualize_tree:
-        tree.show(key=get_score, reverse=True)
+        tree.to_graphviz("Team20_Tree.gv")
+        graphviz.render("dot", format="png", filepath="Team20_Tree.gv", outfile="Team20_Tree.png")
 
     return reverse_parse_position(oldPos), reverse_parse_position(newPos)
 
