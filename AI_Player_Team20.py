@@ -100,12 +100,6 @@ def get_board_score(
             score += (8 - closest_dist)
     return score
 
-CORNERS = {
-    1: (4, 4),
-    2: (4, 0),
-    3: (0, 0),
-    4: (0, 4)
-}
 
 
 WINCELL_SCORE_BONUS = 1
@@ -147,7 +141,6 @@ def recursive_max(
         visited_positions[position] = (scores, curr_depth)
         return scores, None
 
-    corner = CORNERS[player]
     legal_moves: List[Tuple[Tuple[int, int], Tuple[int, int]]] = get_legal_moves(board, player) 
     next_player = (player % 4) + 1
 
@@ -168,9 +161,13 @@ def recursive_max(
     for move in legal_moves:
         oldPos, newPos = move
 
-        dist_left_before = abs(corner[0] - oldPos[0]) + abs(corner[1] - oldPos[1])
-        dist_left_after = abs(corner[0] - newPos[0]) + abs(corner[1] - newPos[1])
-        score = dist_left_before - dist_left_after
+        #Score temp board using our heuristic eval for move ordering
+        temp_board = [row[:] for row in board]
+        temp_board[oldPos[0]][oldPos[1]] = 0
+        temp_board[newPos[0]][newPos[1]] = player
+
+    
+        score = get_board_score(temp_board, player)
 
         ordered_moves.append((score, move))
 
