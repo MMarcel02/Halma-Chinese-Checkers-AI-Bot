@@ -220,6 +220,7 @@ def recursive_max(
         
         points_remaininng = MAX_GLOBAL_BOUND_ALL_PLAYERS - min_bound
         if parent_min_bound >= points_remaininng or min_bound >= MAX_GLOBAL_BOUND_SINGLE_PLAYER:
+            print("Pruned!")
             break
 
     visited_positions[position] = (best_score, curr_depth)
