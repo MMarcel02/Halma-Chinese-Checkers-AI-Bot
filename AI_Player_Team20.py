@@ -58,12 +58,11 @@ def get_legal_moves(
     return legal_moves
 
 
+WINCELL_SCORE_BONUS = 1
+
 '''
 Evaluate postion a player on board (Week 2)
 '''
-
-WINCELL_SCORE_BONUS = 1
-
 def get_board_score(
     board: List[List[int]],
     player: int,
