@@ -1,6 +1,6 @@
 from treelib import Tree
-from halma import *
 import itertools
+from halma import *
 import math
 import graphviz
 
@@ -192,7 +192,7 @@ def recursive_max(
 Entry point for 4 player multiplayer variant
 Selects a move and enables tree visualization
 '''
-def AI_PLAYER_TEAM20(
+def AI_Player_Team20(
     board: List[List[int]],
     player: int,
     visualize_tree: bool
