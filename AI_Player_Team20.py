@@ -101,12 +101,6 @@ def get_board_score(
             score += (8 - closest_dist)
     return score
 
-CORNERS = {
-    1: (4, 4),
-    2: (4, 0),
-    3: (0, 0),
-    4: (0, 4)
-}
 
 SCORE_DISTANCE_BOUND = 3 * 8  # 3 pieces, max distance of 8
 SCORE_WINCELL_BONUS_BOUND = 3 * WINCELL_SCORE_BONUS # 3 pieces, each can have win cell bonus
@@ -144,7 +138,6 @@ def recursive_max(
         visited_positions[position] = (scores, curr_depth)
         return scores, None
 
-    corner = CORNERS[player]
     legal_moves: List[Tuple[Tuple[int, int], Tuple[int, int]]] = get_legal_moves(board, player) 
     next_player = (player % 4) + 1
 
@@ -165,9 +158,13 @@ def recursive_max(
     for move in legal_moves:
         oldPos, newPos = move
 
-        dist_left_before = abs(corner[0] - oldPos[0]) + abs(corner[1] - oldPos[1])
-        dist_left_after = abs(corner[0] - newPos[0]) + abs(corner[1] - newPos[1])
-        score = dist_left_before - dist_left_after
+        #Score temp board using our heuristic eval for move ordering
+        temp_board = [row[:] for row in board]
+        temp_board[oldPos[0]][oldPos[1]] = 0
+        temp_board[newPos[0]][newPos[1]] = player
+
+    
+        score = get_board_score(temp_board, player)
 
         ordered_moves.append((score, move))
 
@@ -199,7 +196,7 @@ def recursive_max(
                             parent = parent_id,
                             data = score)
 
-        #After finiding best score, whats left can be at most Sum - that score;
+        #After finding best score, whats left can be at most Sum - that score;
         #Our attempt at shallow pruning (not robust in multiplayer variant due to bounding)
         if best_score is not None:
             next_bound = SCORE_SUM_BOUND - best_score[player_index]
