@@ -45,6 +45,12 @@ def get_legal_moves(
                     row_offset = i - 2
                     col_offset = j - 2
 
+                    if row_offset != 0 and col_offset != 0:
+                        continue
+                    
+                    if row_offset == 0 and col_offset == 0:
+                        continue
+                    
                     new_row = row + row_offset
                     new_col = col + col_offset
 
